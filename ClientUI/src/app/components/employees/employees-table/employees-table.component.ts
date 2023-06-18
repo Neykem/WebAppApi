@@ -11,8 +11,8 @@ export class EmployeesTableComponent {
     {
       id: '1234-1234-1234-1234',
       name: 'Иванов Иван Иванович',
-      dateOfBirth: Date.prototype,
-      dateOfEmployment: Date.prototype,
+      dateOfBirth: new Date("2018-02-08T10:30:35"),
+      dateOfEmployment: new Date("2018-02-08T10:30:35"),
       department: 'IT',
       salary: 80000
     }
