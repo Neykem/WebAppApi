@@ -1,25 +1,26 @@
 import { Component, OnInit } from '@angular/core';
+import { EmployeesService } from 'src/app/services/employees.service';
 import { Employee } from '../../../models/employees.model';
 
 @Component({
   selector: 'app-employees-table',
   templateUrl: './employees-table.component.html',
-  styleUrls: ['./employees-table.component.css']
+  styleUrls: ['./employees-table.component.css'],
+  providers: [EmployeesService]
 })
-export class EmployeesTableComponent {
-  employees: Employee[] = [
-    {
-      id: '1234-1234-1234-1234',
-      name: 'Иванов Иван Иванович',
-      dateOfBirth: new Date("2018-02-08T10:30:35"),
-      dateOfEmployment: new Date("2018-02-08T10:30:35"),
-      department: 'IT',
-      salary: 80000
-    }
-  ];
-  constructor() { }
+export class EmployeesTableComponent implements OnInit {
+  employees: Employee[] = [];
+  constructor(private employeesService: EmployeesService) { }
 
   ngOnInit(): void {
-    
+    this.employeesService.getEmployees()
+    .subscribe({
+      next: (employees) => {
+        this.employees = employees;
+    },
+    error: (response) => {
+      console.log(response);
+    }
+    })
   }
 }

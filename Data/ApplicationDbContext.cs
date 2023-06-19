@@ -5,10 +5,10 @@ namespace WebAppApi.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext() : base()
+        public ApplicationDbContext(DbContextOptions contextOptions) : base(contextOptions)
         {
 
         }
-        DbSet<Employee> Employees { get; set; }
+        public DbSet<Employee> Employees { get; set; }
     }
 }

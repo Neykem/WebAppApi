@@ -1,24 +1,27 @@
-<div class="container m-5">
-  <h1 class="mb-3">Список сотрудников:</h1>
-  <table class="table" *ngIf="employees && employees.length > 0">
-    <thead>
-      <tr>
-        <th scope="col">id</th>
-        <th scope="col">Name</th>
-        <th scope="col">Department</th>
-        <th scope="col">Salary</th>
-        <th scope="col">Date</th>
-      </tr>
-    </thead>
+<div class="container m-3 mx-5">
+  <h1 class="mb-3 mt-3 mx-3">Список сотрудников:</h1>
+
+  <table class="table" *ngIf="employees">
     <tbody>
       <tr *ngFor="let employee of employees">
-        <td>{{ employee.id}}</td>
-        <td>{{ employee.name}}</td>
-        <td>{{ employee.department}}</td>
-        <td>{{ employee.salary}}</td>
-        <td>{{ employee.dateOfEmployment.getFullYear()}}</td>
+        <td>
+          <div class="fs-5 p-2 card">
+            <p class=" mx-3 mt-2 mb-1"><strong>ID сотрудника: </strong><mark>{{ employee.id}}</mark></p>
+          <div class="d-flex fill flex-row justify-content-start align-items-center m-1  p-2">
+            <img class="img img-ico" src="/assets/img/user.png" alt="image" >
+            <p class="my-3 mx-3"><strong>Фио:</strong> {{ employee.name}}</p>
+            <p class="my-3 mx-3"><strong>Отдел:</strong> {{ employee.department }}</p>
+            <p class="my-3 mx-3"><strong>Зарплата:</strong> {{ employee.salary }}.00</p>
+            <p class="my-3 mx-3"><strong>Дата найма:</strong> {{ employee.dateOfEmployment}}</p>
+            <div class="btn-group ms-auto">
+              <button type="button" class="btn btn-primary">Изменить</button>
+              <button type="button" class="btn btn-danger">Удалить</button>
+            </div>
+          </div>
+          </div>
+         </td>
       </tr>
     </tbody>
   </table>
-  <p class="lead" *ngIf="!employees && employees <= 0">Нет доступных сотрудников в списке!</p>
+  <p class="lead" *ngIf="!employees">Нет доступных сотрудников в списке!</p>
 </div>
