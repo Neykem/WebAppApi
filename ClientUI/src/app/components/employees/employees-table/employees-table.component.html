@@ -1,5 +1,5 @@
 <div class="container m-3 mx-5">
-  <h1 class="mb-3 mt-3">Список сотрудников:</h1>
+  <h3 class="mb-4 mt-4">Список сотрудников:</h3>
 
   <table class="table" *ngIf="employees">
     <tbody>
@@ -14,8 +14,26 @@
             <p class="my-3 mx-3"><strong>Зарплата:</strong> {{ employee.salary }}.00</p>
             <p class="my-3 mx-3"><strong>Дата найма:</strong> {{ employee.dateOfEmployment}}</p>
             <div class="btn-group ms-auto">
-              <button type="button" class="btn btn-primary">Изменить</button>
-              <button type="button" class="btn btn-danger">Удалить</button>
+              <button type="button" class="btn btn-primary" [routerLink]="['/employees', 'view', employee.id]">Изменить</button>
+              <button type="button" class="btn btn-danger" data-bs-toggle="modal" [attr.data-bs-target]="'#modalDelete-' + employee.id">Удалить</button>
+              <div class="modal fade" [id]="'modalDelete-' + employee.id" tabindex="-1" aria-labelledby="modalDeleteLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="modalDeleteLabel">Предупреждение</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" >
+                      Вы уверены что хотите удалить элемент?
+                      <p>{{ employee.id }}</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                      <button type="button" class="btn btn-danger" data-bs-dismiss="modal" [routerLink]="['/employees']" (click)="deleteEmployee(employee.id)">Удалить</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           </div>
@@ -25,16 +43,18 @@
   </table>
     <p class="lead" *ngIf="employees.length <= 0">Нет доступных сотрудников в списке!</p>
     <div class="mb-3 mt-3">
-      <button type="button" class="btn btn-primary mb-3">Добавить нового сотрудника</button>
+      <button type="button" class="btn btn-primary mb-3" aria-current="page" routerLink="add">
+        Добавить нового сотрудника
+      </button>
       <p class="lead">Дополнительные скрипты:</p>
       <div class="btn-group" role="group">
         <button id="btnGroupDrop" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
           Выберите запрос
         </button>
         <ul class="dropdown-menu" aria-labelledby="btnGroupDrop">
-          <li><a class="dropdown-item" href="#">Показать сотрудников с ЗП 10K</a></li>
-          <li><a class="dropdown-item" href="#">Удаление всех сотрудников старше 70 лет</a></li>
-          <li><a class="dropdown-item" href="#">Установить минимальное ЗП 15K всем сотрудникам</a></li>
+          <li><a class="dropdown-item" href="#" (click)="getEmployeesWithSalaryParam()">Показать сотрудников с ЗП больше 10K</a></li>
+          <li><a class="dropdown-item" href="#" (click)="deleteOldEmployees()">Удаление всех сотрудников старше 70 лет</a></li>
+          <li><a class="dropdown-item" href="#" (click)="setEmployeesMinimalSalary()">Установить минимальное ЗП 15K всем сотрудникам</a></li>
         </ul>
     </div>
 </div>

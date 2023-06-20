@@ -1,0 +1,37 @@
+<div class="container m-3 mx-5">
+    <h1 class="mb-3 mt-3">Обзор карточки сотркдника:</h1>
+
+    <form #form="ngForm" (ngSubmit)="updateEmployee()">
+        <div class="mb-3">
+            <label for="id" class="form-label">ID сотрудника:</label>
+            <input type="text" class="form-control" id="id" readonly
+            name="id" [(ngModel)]="employeeSelected.id">
+        </div>
+        <div class="mb-3">
+            <label for="name" class="form-label">Фио сотрудника:</label>
+            <input type="text" class="form-control" id="name"
+            name="name" [(ngModel)]="employeeSelected.name">
+        </div>
+        <div class="mb-3">
+            <label for="dateOfBirth" class="form-label">Дата рождения:</label>
+            <input type="date-local" class="form-control" id="dateOfBirth"
+            name="dateOfBirth" [(ngModel)]="employeeSelected.dateOfBirth">
+        </div>
+        <div class="mb-3">
+            <label for="department" class="form-label">Отдел:</label>
+            <input type="text" class="form-control" id="department"
+            name="department" [(ngModel)]="employeeSelected.department">
+        </div>
+        <div class="mb-3">
+            <label for="salary" class="form-label">Зарплата сотрудника:</label>
+            <input type="number" class="form-control" id="salary"
+            name="salary" [(ngModel)]="employeeSelected.salary">
+        <div class="mb-3">
+            <label for="dateOfEmployment" class="form-label">Дата найма сотрудника:</label>
+            <input type="date-local" class="form-control" id="dateOfEmployment"
+            name="dateOfEmployment" [(ngModel)]="employeeSelected.dateOfEmployment">
+        </div>
+        <button type="submit" class="btn btn-primary mt-3 p-2 px-5">Изменить</button>
+        </div>
+    </form>
+</div>

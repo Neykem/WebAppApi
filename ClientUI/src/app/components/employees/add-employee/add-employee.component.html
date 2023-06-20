@@ -1,0 +1,27 @@
+<div class="container m-3 mx-5">
+    <h1 class="mb-3 mt-3">Добавление нового сотрудника:</h1>
+
+    <form #form="ngForm" (ngSubmit)="addEmployee()">
+        <div class="mb-3">
+            <label for="name" class="form-label">Фио сотрудника:</label>
+            <input type="text" class="form-control" id="name"
+            name="name" [(ngModel)]="addEmployeeEntity.name">
+        </div>
+        <div class="mb-3">
+            <label for="dateOfBirth" class="form-label">Дата рождения:</label>
+            <input type="date" class="form-control" id="dateOfBirth"
+            name="dateOfBirth" [(ngModel)]="addEmployeeEntity.dateOfBirth">
+        </div>
+        <div class="mb-3    ">
+            <label for="department" class="form-label">Отдел:</label>
+            <input type="text" class="form-control" id="department"
+            name="department" [(ngModel)]="addEmployeeEntity.department">
+        </div>
+        <div class="mb-3">
+            <label for="salary" class="form-label">Зарплата сотрудника:</label>
+            <input type="number" class="form-control" id="salary"
+            name="salary" [(ngModel)]="addEmployeeEntity.salary">
+        </div>
+        <button type="submit" class="btn btn-primary mt-3 p-2 px-5">Добавить</button>
+      </form>
+</div>
