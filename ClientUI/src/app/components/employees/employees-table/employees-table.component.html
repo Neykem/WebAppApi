@@ -1,5 +1,5 @@
 <div class="container m-3 mx-5">
-  <h1 class="mb-3 mt-3 mx-3">Список сотрудников:</h1>
+  <h1 class="mb-3 mt-3">Список сотрудников:</h1>
 
   <table class="table" *ngIf="employees">
     <tbody>
@@ -23,5 +23,18 @@
       </tr>
     </tbody>
   </table>
-  <p class="lead" *ngIf="!employees">Нет доступных сотрудников в списке!</p>
+    <p class="lead" *ngIf="employees.length <= 0">Нет доступных сотрудников в списке!</p>
+    <div class="mb-3 mt-3">
+      <button type="button" class="btn btn-primary mb-3">Добавить нового сотрудника</button>
+      <p class="lead">Дополнительные скрипты:</p>
+      <div class="btn-group" role="group">
+        <button id="btnGroupDrop" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          Выберите запрос
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="btnGroupDrop">
+          <li><a class="dropdown-item" href="#">Показать сотрудников с ЗП 10K</a></li>
+          <li><a class="dropdown-item" href="#">Удаление всех сотрудников старше 70 лет</a></li>
+          <li><a class="dropdown-item" href="#">Установить минимальное ЗП 15K всем сотрудникам</a></li>
+        </ul>
+    </div>
 </div>
