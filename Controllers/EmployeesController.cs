@@ -1,13 +1,16 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
-using WebAppApi.Data;
 using WebAppApi.Data.DataModels;
+using WebAppApi.Domain;
+using WebAppApi.Domain.Contracts;
 
 namespace WebAppApi.Controllers
 {
@@ -18,13 +21,15 @@ namespace WebAppApi.Controllers
     [Route("api/[controller]")]
     public class EmployeesController : ControllerBase
     {
-        private readonly ILogger<EmployeesController> _logger;
-        private readonly ApplicationDbContext _applicationDbContext;
+        private readonly ILogger<EmployeesController> _logger; //Добавил запись логов
+        private readonly IEmployeesRepository _employeesRepository; //Обращение к контексту переделал через репозиторий
+        private readonly IMapper _mapper; //Обновление сущностей переделал через AutoMapper
 
-        public EmployeesController(ILogger<EmployeesController> logger, ApplicationDbContext applicationDbContext)
+        public EmployeesController(ILogger<EmployeesController> logger, IEmployeesRepository employeesRepository, IMapper mapper)
         {
             _logger = logger;
-            _applicationDbContext = applicationDbContext;
+            _employeesRepository = employeesRepository;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -36,10 +41,22 @@ namespace WebAppApi.Controllers
         {
             try
             {
-                return Ok(await _applicationDbContext.Employees.ToListAsync());
+                var employeeList = await _employeesRepository.GetEmployeesAsync();
+                if (employeeList == null || employeeList.Count == 0)
+                {
+                    _logger.LogWarning("По запросу возвращен пустой результат!");
+                    return Ok(employeeList);
+                }
+                return Ok(employeeList);
+            }
+            catch (DbException ex)
+            {
+                _logger.LogError(ex, "Ошибка обращения к Базе Данных!");
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Неизвестная ошибка при получений данных!");
                 return BadRequest(ex.Message);
             }
         }
@@ -55,7 +72,7 @@ namespace WebAppApi.Controllers
         {
             try
             {
-                var employees = await _applicationDbContext.Employees.Where(o => o.Salary >= salary).ToListAsync();
+                var employees = await _employeesRepository.GetEmployeesAsync();
 
                 if (employees == null || employees.Count == 0)
                 {
@@ -64,12 +81,18 @@ namespace WebAppApi.Controllers
 
                 else
                 {
-                    return Ok(employees);
+                    return Ok(employees.Where(o => o.Salary >= salary));
                 }
 
             }
+            catch (DbException ex)
+            {
+                _logger.LogError(ex, "Ошибка обращения к Базе Данных!");
+                return BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Неизвестная ошибка при получений данных!");
                 return BadRequest(ex.Message);
             }
         }
@@ -85,7 +108,7 @@ namespace WebAppApi.Controllers
         {
             try
             {
-                var employeeSelect = await _applicationDbContext.Employees.FirstOrDefaultAsync(o=>o.Id == id);
+                var employeeSelect = await _employeesRepository.GetEmployeeAsync(id);
 
                 if (employeeSelect == null)
                 {
@@ -98,8 +121,14 @@ namespace WebAppApi.Controllers
                 }
 
             }
+            catch (DbException ex)
+            {
+                _logger.LogError(ex, "Ошибка обращения к Базе Данных!");
+                return BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Неизвестная ошибка при получений данных!");
                 return BadRequest(ex.Message);
             }
         }
@@ -114,14 +143,19 @@ namespace WebAppApi.Controllers
         {
             try
             {
-                var buffList = await _applicationDbContext.Employees.Where(o => o.Salary < new_salary).ToListAsync();
-                buffList.ForEach(o => o.Salary = new_salary);
-                _applicationDbContext.UpdateRange(buffList);
-                await _applicationDbContext.SaveChangesAsync();
-                return Ok(await _applicationDbContext.Employees.ToListAsync());
+                var buffList = await _employeesRepository.GetEmployeesAsync();
+                buffList.Where(o => o.Salary < new_salary).ToList().ForEach(o => o.Salary = new_salary);
+                await _employeesRepository.UpdateEmployeeRangeAsync(buffList);
+                return Ok(await _employeesRepository.GetEmployeesAsync());
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Ошибка при обновлений данных!");
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Неизвестная ошибка!");
                 return BadRequest(ex.Message);
             }
         }
@@ -136,13 +170,21 @@ namespace WebAppApi.Controllers
             try
             {
                 employee.Id = Guid.NewGuid();
-                await _applicationDbContext.Employees.AddAsync(employee);
-                await _applicationDbContext.SaveChangesAsync();
-
+                if (await _employeesRepository.CreateEmployeeAsync(employee) == false)
+                {
+                    _logger.LogWarning("Ошибка при попытке создание нового сотрудника!");
+                    return BadRequest("Не удалось добавить нового сторудника!");
+                }
                 return Ok(employee);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Ошибка при обновлений данных!");
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Неизвестная ошибка!");
                 return BadRequest(ex.Message);
             }
         }
@@ -153,32 +195,36 @@ namespace WebAppApi.Controllers
         /// <paramref name="employeeUpdate"/>
         /// </summary>
         [HttpPut("&id={id}")]
-        public async Task<IActionResult> UpdateEmployeeById(Guid id, Employee employeeUpdate)
+        public async Task<IActionResult> UpdateEmployeeById(Guid id, [FromBody] EmployeeUpdateDto employeeUpdate)
         {
             try
             {
-                var employeeSelect = await _applicationDbContext.Employees.FindAsync(id);
+                var employeeSelect = await _employeesRepository.GetEmployeeAsync(id);
 
                 if (employeeSelect == null)
                 {
                     return NotFound();
                 }
-
-                employeeSelect.Name = employeeUpdate.Name;
-                employeeSelect.Department = employeeUpdate.Department;
-                employeeSelect.DateOfBirth = employeeUpdate.DateOfBirth;
-                employeeSelect.DateOfEmployment = employeeUpdate.DateOfEmployment;
-                employeeSelect.Salary = employeeUpdate.Salary;
-
-                await _applicationDbContext.SaveChangesAsync();
+                _mapper.Map(employeeSelect, employeeUpdate);
+                if (await _employeesRepository.UpdateEmployeeAsync(employeeSelect) == false)
+                {
+                    _logger.LogWarning("Ошибка при обновлений данных сторудника!");
+                    return BadRequest(employeeSelect);
+                }
                 return Ok(employeeSelect);
+            }
+            catch (DbException ex)
+            {
+                _logger.LogError(ex, "Ошибка при обрашений к Базе Данных!");
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Неизвестная ошибка!");
                 return BadRequest(ex.Message);
             }
         }
-        
+
         /// <summary>
         /// Удаление сотрудников старше указзаного возаста
         /// <paramref name="age"/>
@@ -188,17 +234,24 @@ namespace WebAppApi.Controllers
         {
             try
             {
-                var buffList = await _applicationDbContext.Employees.Where(o => (DateTime.Now.Year - o.DateOfBirth.Year) >= age).ToListAsync();
+                var buffList = await _employeesRepository.GetEmployeesAsync();
                 if (buffList == null || buffList.Count <= 0)
                 {
                     return NotFound();
                 }
-                _applicationDbContext.RemoveRange(buffList);
-                _applicationDbContext.SaveChanges();
+                if (await _employeesRepository.DeleteEmployeeRangeAsync(buffList
+                    .Where(o => (DateTime.Now.Year - o.DateOfBirth.Year) >= age).ToList())
+                    == false)
+                {
+                    _logger.LogWarning("Ошибка при удалений старых сторудников!");
+                    return BadRequest(buffList);
+                }
+                _logger.LogInformation("Был удален список старых сотрудников!");
                 return Ok();
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Неизвестная ошибка при удалений старых сотрудников!");
                 return BadRequest(ex.Message);
             }
         }
@@ -212,17 +265,22 @@ namespace WebAppApi.Controllers
         {
             try
             {
-                var employeeSelect = await _applicationDbContext.Employees.FindAsync(id);
+                var employeeSelect = await _employeesRepository.GetEmployeeAsync(id);
                 if (employeeSelect == null)
                 {
                     return NotFound();
                 }
-                _applicationDbContext.Remove(employeeSelect);
-                await _applicationDbContext.SaveChangesAsync();
+                if (await _employeesRepository.DeleteEmployeeAsync(employeeSelect) == false)
+                {
+                    _logger.LogWarning("Ошибка при обновлений данных сторудника!");
+                    return BadRequest(employeeSelect);
+                }
+                _logger.LogInformation("Был удален объект БД!" + employeeSelect);
                 return Ok(employeeSelect);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Неизвестная ошибка при удалений сотрудника!");
                 return BadRequest(ex.Message);
             }
         }
